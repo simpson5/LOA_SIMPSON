@@ -16,23 +16,31 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <h1 className="text-xl font-bold text-orange-500">LOA 숙제 체크</h1>
-            <nav className="flex gap-1">
-              {navItems.map(item => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    `px-4 py-2 rounded-lg transition-colors ${
-                      isActive
-                        ? "bg-orange-600 text-white"
-                        : "text-gray-300 hover:bg-gray-700"
-                    }`
-                  }
-                >
-                  {item.label}
-                </NavLink>
-              ))}
-            </nav>
+            <div className="flex items-center gap-4">
+              <nav className="flex gap-1">
+                {navItems.map(item => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) =>
+                      `px-4 py-2 rounded-lg transition-colors ${
+                        isActive
+                          ? "bg-orange-600 text-white"
+                          : "text-gray-300 hover:bg-gray-700"
+                      }`
+                    }
+                  >
+                    {item.label}
+                  </NavLink>
+                ))}
+              </nav>
+              <a
+                href="/logout"
+                className="px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                로그아웃
+              </a>
+            </div>
           </div>
         </div>
       </header>

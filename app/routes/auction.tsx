@@ -9,6 +9,7 @@ import {
   type AuctionItem,
   type MarketItem,
 } from "~/services/lostark-api";
+import { requireUser } from "~/lib/supabase.server";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -16,7 +17,13 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
+export async function loader({ request }: Route.LoaderArgs) {
+  await requireUser(request);
+  return {};
+}
+
 export async function action({ request }: Route.ActionArgs) {
+  await requireUser(request);
   const formData = await request.formData();
   const itemName = formData.get("itemName") as string;
   const searchType = formData.get("searchType") as "auction" | "market";

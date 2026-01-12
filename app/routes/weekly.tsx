@@ -2,8 +2,8 @@ import { Form } from "react-router";
 import type { Route } from "./+types/weekly";
 import { Layout } from "~/components/Layout";
 import {
-  loadChecklist,
-  saveChecklist,
+  loadChecklistFromDB,
+  toggleWeeklyRaid,
   RAIDS,
   calculateTotalGold,
   getRaidsByCategory,
@@ -13,6 +13,7 @@ import {
   type RaidDifficulty,
   type Raid,
 } from "~/utils/storage";
+import { createSupabaseServerClient, requireUser } from "~/lib/supabase.server";
 
 // 난이도 표시 순서
 const DIFFICULTY_DISPLAY_ORDER: RaidDifficulty[] = ["hard", "nightmare", "normal", "single"];
@@ -40,45 +41,30 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export async function loader() {
-  const checklist = await loadChecklist();
+export async function loader({ request }: Route.LoaderArgs) {
+  const user = await requireUser(request);
+  const { supabase } = createSupabaseServerClient(request);
+  const checklist = await loadChecklistFromDB(supabase, user.id);
   return { checklist };
 }
 
 export async function action({ request }: Route.ActionArgs) {
+  const user = await requireUser(request);
+  const { supabase } = createSupabaseServerClient(request);
+
   const formData = await request.formData();
   const characterName = formData.get("characterName") as string;
   const raidId = formData.get("raidId") as string;
   const checked = formData.get("checked") === "true";
 
-  const checklist = await loadChecklist();
-  const char = checklist.characters.find(c => c.characterName === characterName);
+  const { error } = await toggleWeeklyRaid(supabase, user.id, characterName, raidId, checked);
 
-  if (char) {
-    // 최대 3개 체크 제한 (유효한 레이드 ID만 카운트)
-    const validRaidIds = new Set(RAIDS.map(r => r.id));
-    const currentCount = Object.entries(char.weeklyRaids)
-      .filter(([id, checked]) => checked && validRaidIds.has(id)).length;
-
-    if (checked && currentCount >= 3) {
-      return { checklist, error: "최대 3개까지만 체크 가능합니다." };
-    }
-
-    // 삭제된 레이드 ID 정리
-    for (const raidId of Object.keys(char.weeklyRaids)) {
-      if (!validRaidIds.has(raidId)) {
-        delete char.weeklyRaids[raidId];
-      }
-    }
-
-    if (checked) {
-      char.weeklyRaids[raidId] = true;
-    } else {
-      delete char.weeklyRaids[raidId];
-    }
-    await saveChecklist(checklist);
+  if (error) {
+    const checklist = await loadChecklistFromDB(supabase, user.id);
+    return { checklist, error };
   }
 
+  const checklist = await loadChecklistFromDB(supabase, user.id);
   return { checklist };
 }
 

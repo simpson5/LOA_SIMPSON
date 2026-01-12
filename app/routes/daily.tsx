@@ -1,8 +1,8 @@
 import { Form } from "react-router";
 import type { Route } from "./+types/daily";
 import { Layout } from "~/components/Layout";
-import { CounterItem } from "~/components/ChecklistItem";
-import { loadChecklist, saveChecklist, DAILY_TASKS } from "~/utils/storage";
+import { loadChecklistFromDB, updateDailyTask, DAILY_TASKS } from "~/utils/storage";
+import { createSupabaseServerClient, requireUser } from "~/lib/supabase.server";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -10,25 +10,25 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export async function loader() {
-  const checklist = await loadChecklist();
+export async function loader({ request }: Route.LoaderArgs) {
+  const user = await requireUser(request);
+  const { supabase } = createSupabaseServerClient(request);
+  const checklist = await loadChecklistFromDB(supabase, user.id);
   return { checklist };
 }
 
 export async function action({ request }: Route.ActionArgs) {
+  const user = await requireUser(request);
+  const { supabase } = createSupabaseServerClient(request);
+
   const formData = await request.formData();
   const characterName = formData.get("characterName") as string;
   const taskId = formData.get("taskId") as string;
   const count = parseInt(formData.get("count") as string, 10);
 
-  const checklist = await loadChecklist();
-  const char = checklist.characters.find(c => c.characterName === characterName);
+  await updateDailyTask(supabase, user.id, characterName, taskId, count);
 
-  if (char) {
-    char.dailyTasks[taskId] = count;
-    await saveChecklist(checklist);
-  }
-
+  const checklist = await loadChecklistFromDB(supabase, user.id);
   return { checklist };
 }
 
@@ -108,15 +108,12 @@ export default function Daily({ loaderData }: Route.ComponentProps) {
                   {/* 숙제 목록 */}
                   <div className="p-4 space-y-2">
                     {DAILY_TASKS.map(task => (
-                      <Form key={task.id} method="post" className="contents">
-                        <input type="hidden" name="characterName" value={char.characterName} />
-                        <input type="hidden" name="taskId" value={task.id} />
-                        <DailyTaskItem
-                          task={task}
-                          count={char.dailyTasks[task.id] || 0}
-                          characterName={char.characterName}
-                        />
-                      </Form>
+                      <DailyTaskItem
+                        key={task.id}
+                        task={task}
+                        count={char.dailyTasks[task.id] || 0}
+                        characterName={char.characterName}
+                      />
                     ))}
                   </div>
                 </div>

@@ -3,7 +3,8 @@ import type { Route } from "./+types/characters";
 import { Layout } from "~/components/Layout";
 import { CharacterCard } from "~/components/CharacterCard";
 import { getCharacterSiblings } from "~/services/lostark-api";
-import { loadChecklist, saveChecklist, type CharacterChecklist } from "~/utils/storage";
+import { loadChecklistFromDB, addCharacter, updateCharacter, deleteCharacter } from "~/utils/storage";
+import { createSupabaseServerClient, requireUser } from "~/lib/supabase.server";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -11,16 +12,19 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export async function loader() {
-  const checklist = await loadChecklist();
+export async function loader({ request }: Route.LoaderArgs) {
+  const user = await requireUser(request);
+  const { supabase } = createSupabaseServerClient(request);
+  const checklist = await loadChecklistFromDB(supabase, user.id);
   return { checklist };
 }
 
 export async function action({ request }: Route.ActionArgs) {
+  const user = await requireUser(request);
+  const { supabase } = createSupabaseServerClient(request);
+
   const formData = await request.formData();
   const intent = formData.get("intent");
-
-  const checklist = await loadChecklist();
 
   if (intent === "search") {
     const characterName = formData.get("characterName") as string;
@@ -30,26 +34,28 @@ export async function action({ request }: Route.ActionArgs) {
 
     try {
       const siblings = await getCharacterSiblings(characterName);
+      const checklist = await loadChecklistFromDB(supabase, user.id);
 
       // 기존 체크리스트에 없는 캐릭터만 추가
       const existingNames = new Set(checklist.characters.map(c => c.characterName));
-      const newCharacters: CharacterChecklist[] = siblings
+      const newCharacters = siblings
         .filter(s => !existingNames.has(s.CharacterName))
         .map(s => ({
           characterName: s.CharacterName,
           itemLevel: parseFloat(s.ItemAvgLevel.replace(",", "")),
           className: s.CharacterClassName,
           isGoldCharacter: false,
-          weeklyRaids: {},
-          dailyTasks: {},
         }));
 
-      checklist.characters.push(...newCharacters);
-      await saveChecklist(checklist);
+      // 각 캐릭터를 DB에 추가
+      for (const char of newCharacters) {
+        await addCharacter(supabase, user.id, char);
+      }
 
+      const updatedChecklist = await loadChecklistFromDB(supabase, user.id);
       return {
         success: `${newCharacters.length}개의 캐릭터가 추가되었습니다.`,
-        characters: checklist.characters
+        checklist: updatedChecklist,
       };
     } catch (error) {
       return {
@@ -61,30 +67,37 @@ export async function action({ request }: Route.ActionArgs) {
 
   if (intent === "toggleGold") {
     const name = formData.get("name") as string;
+    const checklist = await loadChecklistFromDB(supabase, user.id);
     const char = checklist.characters.find(c => c.characterName === name);
+
     if (char) {
       const goldCount = checklist.characters.filter(c => c.isGoldCharacter).length;
       if (!char.isGoldCharacter && goldCount >= 6) {
         return { error: "골드 캐릭터는 최대 6개까지 지정할 수 있습니다." };
       }
-      char.isGoldCharacter = !char.isGoldCharacter;
-      await saveChecklist(checklist);
+
+      await updateCharacter(supabase, user.id, name, {
+        isGoldCharacter: !char.isGoldCharacter,
+      });
     }
-    return { checklist };
+
+    const updatedChecklist = await loadChecklistFromDB(supabase, user.id);
+    return { checklist: updatedChecklist };
   }
 
   if (intent === "remove") {
     const name = formData.get("name") as string;
-    checklist.characters = checklist.characters.filter(c => c.characterName !== name);
-    await saveChecklist(checklist);
-    return { checklist };
+    await deleteCharacter(supabase, user.id, name);
+
+    const updatedChecklist = await loadChecklistFromDB(supabase, user.id);
+    return { checklist: updatedChecklist };
   }
 
   return {};
 }
 
 export default function Characters({ loaderData, actionData }: Route.ComponentProps) {
-  const { checklist } = loaderData;
+  const checklist = actionData?.checklist || loaderData.checklist;
   const navigation = useNavigation();
   const isSearching = navigation.formData?.get("intent") === "search";
 
