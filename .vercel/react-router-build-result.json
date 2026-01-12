@@ -1,0 +1,165 @@
+{
+  "buildManifest": {
+    "serverBundles": {
+      "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0": {
+        "id": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+        "file": "build/server/nodejs_eyJydW50aW1lIjoibm9kZWpzIn0/index.js",
+        "config": {
+          "runtime": "nodejs"
+        }
+      }
+    },
+    "routeIdToServerBundleId": {
+      "routes/home": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/characters": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/weekly": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/daily": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/auction": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0"
+    },
+    "routes": {
+      "root": {
+        "id": "root",
+        "file": "app/root.tsx",
+        "path": "",
+        "config": {}
+      },
+      "routes/home": {
+        "id": "routes/home",
+        "parentId": "root",
+        "file": "app/routes/home.tsx",
+        "index": true,
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/characters": {
+        "id": "routes/characters",
+        "parentId": "root",
+        "file": "app/routes/characters.tsx",
+        "path": "characters",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/weekly": {
+        "id": "routes/weekly",
+        "parentId": "root",
+        "file": "app/routes/weekly.tsx",
+        "path": "weekly",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/daily": {
+        "id": "routes/daily",
+        "parentId": "root",
+        "file": "app/routes/daily.tsx",
+        "path": "daily",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/auction": {
+        "id": "routes/auction",
+        "parentId": "root",
+        "file": "app/routes/auction.tsx",
+        "path": "auction",
+        "config": {
+          "runtime": "nodejs"
+        }
+      }
+    }
+  },
+  "reactRouterConfig": {
+    "appDirectory": "/Users/simpson/Desktop/GAME_SPACE/LOA_SIMPSON/app",
+    "basename": "/",
+    "buildDirectory": "/Users/simpson/Desktop/GAME_SPACE/LOA_SIMPSON/build",
+    "future": {
+      "unstable_optimizeDeps": false,
+      "unstable_subResourceIntegrity": false,
+      "unstable_trailingSlashAwareDataRequests": false,
+      "v8_middleware": false,
+      "v8_splitRouteModules": false,
+      "v8_viteEnvironmentApi": false
+    },
+    "routes": {
+      "root": {
+        "id": "root",
+        "file": "root.tsx",
+        "path": ""
+      },
+      "routes/home": {
+        "id": "routes/home",
+        "parentId": "root",
+        "file": "routes/home.tsx",
+        "index": true
+      },
+      "routes/characters": {
+        "id": "routes/characters",
+        "parentId": "root",
+        "file": "routes/characters.tsx",
+        "path": "characters"
+      },
+      "routes/weekly": {
+        "id": "routes/weekly",
+        "parentId": "root",
+        "file": "routes/weekly.tsx",
+        "path": "weekly"
+      },
+      "routes/daily": {
+        "id": "routes/daily",
+        "parentId": "root",
+        "file": "routes/daily.tsx",
+        "path": "daily"
+      },
+      "routes/auction": {
+        "id": "routes/auction",
+        "parentId": "root",
+        "file": "routes/auction.tsx",
+        "path": "auction"
+      }
+    },
+    "routeDiscovery": {
+      "mode": "lazy",
+      "manifestPath": "/__manifest"
+    },
+    "serverBuildFile": "index.js",
+    "serverModuleFormat": "esm",
+    "ssr": true,
+    "allowedActionOrigins": false,
+    "unstable_routeConfig": [
+      {
+        "id": "root",
+        "path": "",
+        "file": "root.tsx",
+        "children": [
+          {
+            "file": "routes/home.tsx",
+            "index": true
+          },
+          {
+            "file": "routes/characters.tsx",
+            "path": "characters"
+          },
+          {
+            "file": "routes/weekly.tsx",
+            "path": "weekly"
+          },
+          {
+            "file": "routes/daily.tsx",
+            "path": "daily"
+          },
+          {
+            "file": "routes/auction.tsx",
+            "path": "auction"
+          }
+        ]
+      }
+    ]
+  },
+  "viteConfig": {
+    "build": {
+      "assetsDir": "assets"
+    }
+  }
+}
